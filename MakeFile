@@ -1,0 +1,15 @@
+CC=gcc
+CFLAGS=-Wall -Wextra -O0 -g -ggdb
+LFLAGS=
+OBJ=structs.o main.o
+
+all: search
+
+search: ${OBJ}
+	${CC} ${LFLAGS} -o search $^
+
+%.o: %.c
+	${CC} ${CFLAGS} -c $^
+
+clean:
+	${RM} *.o search
