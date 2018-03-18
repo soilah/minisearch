@@ -117,11 +117,13 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
                 }
                 if(!sub)
                     break;
-                while(!(isspace(sentence[strlen(sentence)-strlen(sub)-1]))){
-                    sub++;
-                    sub = strstr(sub,result_array[j].query);
-                    if(!sub)
-                        break;
+                if(strcmp(sub,sentence)){
+                    while(!(isspace(sentence[strlen(sentence)-strlen(sub)-1]))){
+                        sub++;
+                        sub = strstr(sub,result_array[j].query);
+                        if(!sub)
+                            break;
+                    }
                 }
                 if(!sub)
                     break;
@@ -162,8 +164,8 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
             while(blank_count++ < strlen(inits))
                 printf(" ");
             printf("%s\n",str2);
-            sentence+=w.ws_col;
-            temp_sent+=w.ws_col;
+            sentence+=w.ws_col - strlen(inits);
+            temp_sent+=w.ws_col - strlen(inits);
             while(times_printed < times_to_print){
                 strncpy(str1,sentence,w.ws_col-strlen(inits));
                 strncpy(str2,temp_sent,w.ws_col-strlen(inits));
