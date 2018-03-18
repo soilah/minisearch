@@ -1,4 +1,4 @@
 
 
-char *docname, *curr_word;
-unsigned k, Map_Size, numOfWords;
+char *docname;
+unsigned int k, Map_Size, numOfWords, queryNum;

@@ -105,8 +105,7 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
         }
         temp_sent= malloc(strlen(sentence)+1);
         strcpy(temp_sent,sentence);
-        j=0;
-        while(result_array[j].query){
+        for(j=0; j<queryNum; j++){
             char *sub=NULL;
             sub=strstr(sentence,result_array[j].query);
             while(sub!=NULL){
@@ -134,7 +133,6 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
                 sub += strlen(result_array[j].query);
                 sub = strstr(sub,result_array[j].query);
             }
-            j++;
         }
         pos=0;
         while(pos < strlen(temp_sent)){
@@ -230,10 +228,30 @@ void tf(node *root, unsigned int id, char *word){
         printf("Word not found!\n");
 }
 
+
+void free_postingList(postingList *plist){
+    postingList *temp;
+    while((temp = plist) != NULL){
+        plist = plist->next;
+        free(temp);
+    }
+}
+
+void free_trie(node *root){
+    if(root->next)
+        free_trie(root->next);
+    if(root->child)
+        free_trie(root->child);
+    if(root->posting)
+        free_postingList(root->posting);
+    free(root);
+}
+
+
 void Csearch(map *Docmap, node *root){
     char *input=NULL, *token=NULL, *command=NULL;
     node *found = NULL;
-    unsigned int i, queryNum;
+    unsigned int i;
     size_t length=0;
     scoreArray *score_array = NULL;
     printf("/");
@@ -272,9 +290,10 @@ void Csearch(map *Docmap, node *root){
             }
             score_array = score(result_array,Docmap, queryNum);
             print_results(result_array,score_array, Docmap);
+            free(score_array);
             for(i=0; i<queryNum; i++){
-                free(result_array[i].query);
-                free(result_array[j].plist);
+                if(result_array[i].query)
+                    free(result_array[i].query);
             }
             free(result_array);
         }
@@ -312,6 +331,10 @@ void Csearch(map *Docmap, node *root){
         }
         printf("/");
         getline(&input, &length, stdin);
+        while(strlen(input)<2){
+            printf("/");
+            getline(&input, &length, stdin);
+        }
         queryNum=0;
         for(i=0; i<strlen(input); i++){
             if(isspace(input[i]))
@@ -322,6 +345,7 @@ void Csearch(map *Docmap, node *root){
         command = malloc(strlen(token)+1);
         strcpy(command,token);
     }
+    free(command);
 }
 
 
@@ -345,29 +369,22 @@ int main(int argc, char* argv[]){
     // TRIE CREATION
     node *root = create_node('*');
     rewind(doc);
-    unsigned int x=1;
     while(getline(&line, &length, doc) != -1){
         token = strtok(line," ");
         unsigned int id = atoi(token);
-        if(Map_Size/10*x == id){
-            printf("%d%%",x*10);
-            if(x != 10)
-                printf("--");
-            else
-                printf("\n");
-            x++;
-        }
         while(token){
             token = strtok(NULL, "  \n");
             if (token){
-                curr_word = malloc(strlen(token)+1);
-                strcpy(curr_word,token);
                 insertNode(root,token,id);
                 numOfWords++;
             }
         }
     }
     Csearch(Docmap,root);
+    free_trie(root);
+    for(i=0; i<Map_Size; i++)
+        free(Docmap[i].document);
+    free(Docmap);
 }
 
 
