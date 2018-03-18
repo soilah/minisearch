@@ -1,14 +1,14 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "structs.h"
-#include "minisearch.h"
 #include <math.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include "minisearch.h"
+#include "structs.h"
 
 
+// Used to get arguments from command line
 void getArgs(int argc, char* argv[]){
     int i;
     for (i=1; i<argc; i++){
@@ -19,10 +19,14 @@ void getArgs(int argc, char* argv[]){
         else if(!strcmp(argv[i], "-k"))
             k = atoi(argv[i+1]);
     }
+    if(k>10){
+        printf("K should be less than 10. Progam will exit now.\n");
+        exit(1);
+    }
 }
 
 
-
+// Calculates the score of each Document
 scoreArray *score(ResArray *result_array,map *docmap, unsigned int queryNum){
     unsigned int i, j,N=Map_Size,count,D;
     double avgdl = (double)numOfWords/(double)N, sum;
@@ -69,26 +73,30 @@ scoreArray *score(ResArray *result_array,map *docmap, unsigned int queryNum){
             }
         }
     }
+    free(n);
     return head_score;
 }
 
 
-
+// Prints results in search command
 void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap){
     // GETTING TERMINAL SIZE
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
     scoreArray *temp = score_array;
-  //  ResArray *temp2 = result_array;
     postingList *plist=NULL;
     unsigned int i=0,j,pos, count=0;
     char *temp_sent=NULL, *sentence=NULL, inits[25];
+    // sentence holds the whole document to be printed, temp_sent holds the
+    // blanks and "^"s to be printed below the sentence and inits holds
+    // the string to be printed at the beginning of each sentence wich is
+    // the score, document id etc.
     while(temp && count<k){
         sprintf(inits,"%d.( %d) [%f] ",i,temp->docId,temp->score);
         j = 0;
         char found=0;
-        while(result_array[j].query){
+        for(j=0; j<queryNum; j++){
             plist = result_array[j].plist;
             while(plist){
                 if(plist->id == temp->docId){
@@ -101,14 +109,18 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
             }
             if(found)
                 break;
-            j++;
         }
+        if(!sentence)
+            break;
         temp_sent= malloc(strlen(sentence)+1);
         strcpy(temp_sent,sentence);
         for(j=0; j<queryNum; j++){
+            if (!result_array[j].query)
+                continue;
             char *sub=NULL;
             sub=strstr(sentence,result_array[j].query);
             while(sub!=NULL){
+                // This checks if query is part of another word at the beggining
                 while(sub[strlen(result_array[j].query)] != ' ' && strcmp(sub,result_array[j].query) && sub[strlen(result_array[j].query)] != '\t'){
                     sub++;
                     sub = strstr(sub,result_array[j].query);
@@ -117,6 +129,7 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
                 }
                 if(!sub)
                     break;
+                // This checks if query is part of another word at the end
                 if(strcmp(sub,sentence)){
                     while(!(isspace(sentence[strlen(sentence)-strlen(sub)-1]))){
                         sub++;
@@ -127,6 +140,11 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
                 }
                 if(!sub)
                     break;
+                if(strlen(result_array[j].query)==1 && (sub[strlen(result_array[j].query)] != ' ' || sub[strlen(result_array[j].query)] != '\t')){
+                    while(!isspace(*sub))
+                        sub++;
+                    sub = strstr(sub,result_array[j].query);
+                }
                 pos=strlen(temp_sent)-strlen(sub);
                 while(temp_sent[pos] != ' ' && pos < strlen(temp_sent)){
                     temp_sent[pos]='^';
@@ -144,6 +162,7 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
         }
         int blank_count;
         unsigned int times_to_print = strlen(sentence)/(w.ws_col-strlen(inits)), times_printed=0;
+        // This is the case that the document fits into terminal screen.
         if(strlen(sentence) < w.ws_col){
             blank_count=0;
             printf("%s",inits);
@@ -152,6 +171,7 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
                 printf(" ");
             printf("%s\n",temp_sent);
         }
+        // In this case document does not fit into terminal screen.
         else{
             char *str1 = malloc(w.ws_col-strlen(inits)+1), *str2 = malloc(w.ws_col-strlen(inits)+1);
             memset(str1,0,w.ws_col-strlen(inits)+1);
@@ -191,7 +211,8 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
 }
 
 
-
+// Df function searches trie recursively and uses a list of letters
+// in order to print the word
 void df(node *level, charArray* letter_array){
     node *temp = level;
     if(temp)
@@ -213,6 +234,8 @@ void df(node *level, charArray* letter_array){
         df(temp->next,letter_array);
 }
 
+
+// tf function
 void tf(node *root, unsigned int id, char *word){
     node *found = NULL;
     found = searchTrie(root, word);
@@ -249,7 +272,8 @@ void free_trie(node *root){
     free(root);
 }
 
-
+// minisearch function, takes commands and calls search, df, tf and prints messages
+// if wrong argumens are given.
 void Csearch(map *Docmap, node *root){
     char *input=NULL, *token=NULL, *command=NULL;
     node *found = NULL;
@@ -258,22 +282,45 @@ void Csearch(map *Docmap, node *root){
     scoreArray *score_array = NULL;
     printf("/");
     getline(&input, &length, stdin);
+    // command is always bigger than 1 letter.
     while(strlen(input)<2){
         printf("/");
         getline(&input, &length, stdin);
     }
     queryNum=0;
     for(i=0; i<strlen(input); i++){
-        if(isspace(input[i]))
+        if(isspace(input[i])){
             queryNum++;
+            while(isspace(input[i]))
+                i++;
+        }
     }
     queryNum--;
+    // Queries must count less than 10.
+    if(queryNum > 10){
+        while(queryNum > 10){
+            printf("Too many queries\n");
+            printf("/");
+            getline(&input, &length, stdin);
+            while(strlen(input)<2){
+                printf("/");
+                getline(&input, &length, stdin);
+            }
+            queryNum=0;
+            for(i=0; i<strlen(input); i++){
+                if(isspace(input[i]))
+                    queryNum++;
+            }
+            queryNum--;
+        }
+    }
     token = strtok(input," \n");
     command = malloc(strlen(token)+1);
     strcpy(command,token);
     while(strcmp(command,"exit")){
         // SEARCH
         if(!strcmp(command,"search")){
+            // A struct that holds the queries and their posting lists.
             ResArray *result_array = malloc(sizeof(ResArray)*queryNum);
             for(i=0; i<queryNum; i++){
                 result_array[i].query = NULL;
@@ -290,6 +337,7 @@ void Csearch(map *Docmap, node *root){
                 }
                 j++;
             }
+            // A list that holds each document id with its score, sorted by score.
             score_array = score(result_array,Docmap, queryNum);
             print_results(result_array,score_array, Docmap);
             free(score_array);
@@ -339,10 +387,30 @@ void Csearch(map *Docmap, node *root){
         }
         queryNum=0;
         for(i=0; i<strlen(input); i++){
-            if(isspace(input[i]))
-            queryNum++;
+            if(isspace(input[i])){
+                queryNum++;
+                while(isspace(input[i]))
+                    i++;
+            }
         }
         queryNum--;
+        if(queryNum > 10){
+            while(queryNum > 10){
+                printf("Too many queries\n");
+                printf("/");
+                getline(&input, &length, stdin);
+                while(strlen(input)<2){
+                    printf("/");
+                    getline(&input, &length, stdin);
+                }
+                queryNum=0;
+                for(i=0; i<strlen(input); i++){
+                    if(isspace(input[i]))
+                        queryNum++;
+                }
+                queryNum--;
+            }
+        }
         token = strtok(input, " \n");
         command = malloc(strlen(token)+1);
         strcpy(command,token);
@@ -350,43 +418,5 @@ void Csearch(map *Docmap, node *root){
     free(command);
 }
 
-
-int main(int argc, char* argv[]){
-    getArgs(argc, argv);
-    FILE* doc = fopen(docname, "r");
-    char *line=NULL, *token=NULL;
-    size_t length;
-    Map_Size=0;
-    numOfWords=0;
-    while(getline(&line, &length, doc) != -1)
-        Map_Size++;
-    // MAP CREATION AND INITIALIZATION
-    map *Docmap = malloc(sizeof(map)*Map_Size);
-    int i;
-    for(i=0; i<Map_Size; i++){
-        Docmap[i].id=0;
-        Docmap[i].document=NULL;
-    }
-    createMap(Docmap,doc);
-    // TRIE CREATION
-    node *root = create_node('*');
-    rewind(doc);
-    while(getline(&line, &length, doc) != -1){
-        token = strtok(line," ");
-        unsigned int id = atoi(token);
-        while(token){
-            token = strtok(NULL, "  \n");
-            if (token){
-                insertNode(root,token,id);
-                numOfWords++;
-            }
-        }
-    }
-    Csearch(Docmap,root);
-    free_trie(root);
-    for(i=0; i<Map_Size; i++)
-        free(Docmap[i].document);
-    free(Docmap);
-}
 
 

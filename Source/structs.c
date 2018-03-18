@@ -72,7 +72,7 @@ node *create_node(char l){
 
 
 node  *createTrie(){
-    node *root = create_node('*');
+    node *root = create_node('\0');
     return root;
 }
 
@@ -91,7 +91,7 @@ node  *search(node *level, char key){
     return found;
 }
 
-
+// Returns a pointer to trie node if found, NULL if not
 node* searchTrie(node *root, char* query){
     node *temp = root;
     temp = search(temp->child,query[0]);
@@ -104,9 +104,12 @@ node* searchTrie(node *root, char* query){
 }
 
 
+
+
 void insertNode(node *level, char* word, unsigned int id){
     node *new=NULL, *temp=level, *temp2=NULL;
-    if (level->letter == '*' && level->child == NULL){
+    // If node to insert is the root node...
+    if (level->letter == '\0' && level->child == NULL){
         while(strlen(word)){
             level->child = create_node(word[0]);
             level = level->child;
@@ -166,10 +169,6 @@ void insertNode(node *level, char* word, unsigned int id){
             }
         }
     }
-}
-
-void print(node *root){
-    printf("[%c]\n",root->child->child->child->next->child->child->letter);
 }
 
 

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+
 // MAP
 
 typedef struct map{
@@ -91,3 +92,13 @@ void insertChar(charArray**,char);
 void printWord(charArray*);
 
 void removeChar(charArray**);
+
+
+
+void getArgs(int, char**);
+
+void Csearch(map*,node*);
+
+void free_trie(node*);
+
+
