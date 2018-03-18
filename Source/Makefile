@@ -1,6 +1,6 @@
 IDIR = ../Include
 CC = gcc
-CFLAGS = -I$(IDIR)
+CFLAGS = -I$(IDIR) -g -ggdb
 OBJ = main.o structs.o minisearch.o
 LIBS = -lm
 

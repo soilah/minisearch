@@ -1,6 +1,7 @@
 #include "structs.h"
 #include "minisearch.h"
 #include <ctype.h>
+#include "assert.h"
 
 // MAP FUNCTIONS
 
@@ -160,6 +161,7 @@ void insertNode(node *level, char* word, unsigned int id){
                 temp = new;
             }
             while(strlen(++word)){
+		assert(temp->child == NULL);
                 temp->child = create_node(word[0]);
                 temp = temp->child;
                 if(strlen(word)==1){
