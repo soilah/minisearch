@@ -161,7 +161,7 @@ void insertNode(node *level, char* word, unsigned int id){
                 temp = new;
             }
             while(strlen(++word)){
-		assert(temp->child == NULL);
+		//assert(temp->child == NULL);
                 temp->child = create_node(word[0]);
                 temp = temp->child;
                 if(strlen(word)==1){

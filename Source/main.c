@@ -23,7 +23,7 @@ int main(int argc, char* argv[]){
         Map_Size++;
     // MAP CREATION AND INITIALIZATION
     map *Docmap = malloc(sizeof(map)*Map_Size);
-    int i;
+    unsigned int i;
     for(i=0; i<Map_Size; i++){
         Docmap[i].id=0;
         Docmap[i].document=NULL;
