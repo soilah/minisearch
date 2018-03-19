@@ -5,7 +5,7 @@ OBJ = main.o structs.o minisearch.o
 LIBS = -lm
 
 minisearch: $(OBJ)
-	gcc -o minisearch $(OBJ)  $(CFLAGS) $(LIBS) -g3
+	gcc -o minisearch $(OBJ) $(LFLAGS) $(LIBS)
 
 
 main.o : main.c
