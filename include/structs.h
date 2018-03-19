@@ -93,12 +93,6 @@ void printWord(charArray*);
 
 void removeChar(charArray**);
 
-
-
-void getArgs(int, char**);
-
-void Csearch(map*,node*);
-
 void free_trie(node*);
 
-
+void Csearch(map *, node *);
