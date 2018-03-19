@@ -274,6 +274,12 @@ void print_results(ResArray *result_array, scoreArray *score_array, map *Docmap)
 				}
 				if(!sub)
 					break;
+                if(strlen(result_array[j].query)==1 && (sub[strlen(result_array[j].query)] != ' ' || sub[strlen(result_array[j].query)] != '\t')){
+                    while(!isspace(*sub))
+                       sub++;
+                    sub = strstr(sub,result_array[j].query);
+                }
+
 				pos=strlen(temp_sent)-strlen(sub);
 				while(temp_sent[pos] != ' ' && pos < strlen(temp_sent)){
 					temp_sent[pos]='^';
