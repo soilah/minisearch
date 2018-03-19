@@ -1,12 +1,11 @@
 IDIR = ../Include
 CC = gcc
-CFLAGS = -I$(IDIR) -g -ggdb
+CFLAGS = -I$(IDIR) -Wall -Wextra -O2 -g -ggdb
 OBJ = main.o structs.o minisearch.o
 LIBS = -lm
 
 minisearch: $(OBJ)
 	gcc -o minisearch $(OBJ) $(LFLAGS) $(LIBS)
-
 
 main.o : main.c
 	gcc -c main.c $(CFLAGS)
@@ -18,6 +17,4 @@ minisearch.o : minisearch.c
 	gcc -c minisearch.c $(CFLAGS)
 
 clean:
-	rm minisearch *.o
-
-
+	${RM} minisearch *.o
