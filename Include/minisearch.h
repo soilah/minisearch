@@ -1,5 +1,5 @@
 char *docname;
-unsigned int k, Map_Size, numOfWords, queryNum;
+unsigned int k, Map_Size, numOfWords;
 
 #define MINISEARCH_MAX_QUERIES 10
 
